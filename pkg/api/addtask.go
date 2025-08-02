@@ -1,5 +1,13 @@
 package api
 
+type ErrorResponse struct {
+	Error string `json:"error"`
+}
+
+type IDResponse struct {
+	ID string `json:"id"`
+}
+
 import (
 	"encoding/json"
 	"fmt"
@@ -7,7 +15,10 @@ import (
 	"time"
 
 	"github.com/KirillAPDS/go_final_project/pkg/db"
+
 )
+
+const layout = "20060102"
 
 func taskHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
@@ -27,12 +38,12 @@ func taskHandler(w http.ResponseWriter, r *http.Request) {
 func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 	if id == "" {
-		writeJSON(w, map[string]string{"error": "ID is not specified"})
+		writeJSONStatus(w, http.StatusBadRequest, ErrorResponse{Error: "ID is not specified"})
 		return
 	}
 	err := db.DeleteTask(id)
 	if err != nil {
-		writeJSON(w, map[string]string{"error": err.Error()})
+		writeJSONStatus(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
 	writeJSON(w, map[string]string{})
@@ -41,38 +52,38 @@ func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 func addTaskHandler(w http.ResponseWriter, r *http.Request) {
 	var task db.Task
 	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
-		writeJSON(w, map[string]string{"error": "Incorrect JSON"})
+		writeJSONStatus(w, http.StatusBadRequest, ErrorResponse{Error: "Incorrect JSON"})
 		return
 	}
 
 	if task.Title == "" {
-		writeJSON(w, map[string]string{"error": "Task title is not specified"})
+		writeJSONStatus(w, http.StatusBadRequest, ErrorResponse{Error: "Task title is not specified"})
 		return
 	}
 
 	if err := checkAndFixDate(&task); err != nil {
-		writeJSON(w, map[string]string{"error": err.Error()})
+		writeJSONStatus(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
 
 	id, err := db.AddTask(&task)
 	if err != nil {
-		writeJSON(w, map[string]string{"error": err.Error()})
+		writeJSONStatus(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
 
-	writeJSON(w, map[string]string{"id": formatID(id)})
+	writeJSON(w, IDResponse{ID: formatID(id)})
 }
 
 func getTaskHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 	if id == "" {
-		writeJSON(w, map[string]string{"error": "ID is not specified"})
+		writeJSONStatus(w, http.StatusBadRequest, ErrorResponse{Error: "ID is not specified"})
 		return
 	}
 	task, err := db.GetTask(id)
 	if err != nil {
-		writeJSON(w, map[string]string{"error": "Task not found"})
+		writeJSONStatus(w, http.StatusBadRequest, ErrorResponse{Error: "Task not found"})
 		return
 	}
 	writeJSON(w, task)
@@ -81,32 +92,39 @@ func getTaskHandler(w http.ResponseWriter, r *http.Request) {
 func editTaskHandler(w http.ResponseWriter, r *http.Request) {
 	var task db.Task
 	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
-		writeJSON(w, map[string]string{"error": "Incorrect JSON"})
+		writeJSONStatus(w, http.StatusBadRequest, ErrorResponse{Error: "Incorrect JSON"})
 		return
 	}
 
 	if task.ID == "" || task.Title == "" {
-		writeJSON(w, map[string]string{"error": "ID or title is incorrect"})
+		writeJSONStatus(w, http.StatusBadRequest, ErrorResponse{Error: "ID or title is incorrect"})
 		return
 	}
 
 	if err := checkAndFixDate(&task); err != nil {
-		writeJSON(w, map[string]string{"error": err.Error()})
+		writeJSONStatus(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
 
 	err := db.UpdateTask(&task)
 	if err != nil {
-		writeJSON(w, map[string]string{"error": err.Error()})
+		writeJSONStatus(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
 
 	writeJSON(w, map[string]string{})
 }
 
-func writeJSON(w http.ResponseWriter, data any) {
+func writeJSONStatus(w http.ResponseWriter, status int, data any) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	json.NewEncoder(w).Encode(data)
+	w.WriteHeader(status)
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		http.Error(w, "failed to encode JSON", http.StatusInternalServerError)
+	}
+}
+
+func writeJSON(w http.ResponseWriter, data any) {
+	writeJSONStatus(w, http.StatusOK, data)
 }
 
 func formatID(id int64) string {
@@ -116,40 +134,39 @@ func formatID(id int64) string {
 func doneHandler(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 	if id == "" {
-		writeJSON(w, map[string]string{"error": "ID is not specified"})
+		writeJSONStatus(w, http.StatusBadRequest, ErrorResponse{Error: "ID is not specified"})
 		return
 	}
 
 	task, err := db.GetTask(id)
 	if err != nil {
-		writeJSON(w, map[string]string{"error": "Task not found"})
+		writeJSONStatus(w, http.StatusBadRequest, ErrorResponse{Error: "Task not found"})
 		return
 	}
 
 	if task.Repeat == "" {
 		err = db.DeleteTask(id)
 		if err != nil {
-			writeJSON(w, map[string]string{"error": err.Error()})
+			writeJSONStatus(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 			return
 		}
 	} else {
 		next, err := NextDate(time.Now(), task.Date, task.Repeat)
 		if err != nil {
-			writeJSON(w, map[string]string{"error": err.Error()})
+			writeJSONStatus(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 			return
 		}
 		err = db.UpdateDate(id, next)
 		if err != nil {
-			writeJSON(w, map[string]string{"error": err.Error()})
+			writeJSONStatus(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 			return
 		}
 	}
 
-	writeJSON(w, map[string]string{})
+	writeJSON(w, map[string]string{})  // 200 OK
 }
 
 func checkAndFixDate(task *db.Task) error {
-	const layout = "20060102"
 	now := time.Now()
 
 	// Подставить сегодняшнюю дату, если не указана
@@ -182,4 +199,3 @@ func checkAndFixDate(task *db.Task) error {
 
 	return nil
 }
-

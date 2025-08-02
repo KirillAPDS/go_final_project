@@ -11,13 +11,18 @@ import (
 )
 
 var jwtSecret = []byte("todo-jwt-secret")
+var todoPassword string
+
+func InitAuth() {
+	todoPassword = os.Getenv("TODO_PASSWORD")
+}
 
 func signinHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	
+
 	var req struct {
 		Password string `json:"password"`
 	}
@@ -26,14 +31,13 @@ func signinHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pass := os.Getenv("TODO_PASSWORD")
-	if pass == "" || req.Password != pass {
+	if todoPassword == "" || req.Password != todoPassword {
 		writeJSON(w, map[string]string{"error": "Incorrect password"})
 		return
 	}
 
 	claims := jwt.MapClaims{
-		"hash": fmt.Sprintf("%x", pass),
+		"hash": fmt.Sprintf("%x", todoPassword),
 		"exp":  time.Now().Add(8 * time.Hour).Unix(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

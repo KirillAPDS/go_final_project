@@ -2,15 +2,13 @@ package api
 
 import (
 	"net/http"
-	"os"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
 func auth(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		pass := os.Getenv("TODO_PASSWORD")
-		if pass == "" {
+		if todoPassword == "" {
 			next(w, r)
 			return
 		}

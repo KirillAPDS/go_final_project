@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/KirillAPDS/go_final_project/pkg/api"
 	"github.com/KirillAPDS/go_final_project/pkg/db"
 	"github.com/KirillAPDS/go_final_project/pkg/server"
 )
@@ -21,6 +22,8 @@ func main() {
 	if port == "" {
 		port = "7540"
 	}
+
+	api.InitAuth()
 
 	if err := server.Run(port); err != nil {
 		log.Fatalf("server failed: %v", err)

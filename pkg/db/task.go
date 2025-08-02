@@ -55,6 +55,9 @@ func Tasks(limit int, search string) ([]*Task, error) {
 		if err := rows.Scan(&t.ID, &t.Date, &t.Title, &t.Comment, &t.Repeat); err != nil {
 			return nil, err
 		}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 		tasks = append(tasks, &t)
 	}
 	if tasks == nil {

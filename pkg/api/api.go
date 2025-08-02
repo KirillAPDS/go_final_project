@@ -30,7 +30,7 @@ func nextDateHandler(w http.ResponseWriter, r *http.Request) {
 	if nowStr == "" {
 		now = time.Now()
 	} else {
-		now, err = time.Parse(dateLayout, nowStr)
+		now, err = time.Parse(layout, nowStr)
 		if err != nil {
 			http.Error(w, "invalid now date", http.StatusBadRequest)
 			return

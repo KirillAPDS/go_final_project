@@ -1,13 +1,5 @@
 package api
 
-type ErrorResponse struct {
-	Error string `json:"error"`
-}
-
-type IDResponse struct {
-	ID string `json:"id"`
-}
-
 import (
 	"encoding/json"
 	"fmt"
@@ -17,6 +9,14 @@ import (
 	"github.com/KirillAPDS/go_final_project/pkg/db"
 
 )
+
+type ErrorResponse struct {
+	Error string `json:"error"`
+}
+
+type IDResponse struct {
+	ID string `json:"id"`
+}
 
 const layout = "20060102"
 

@@ -16,7 +16,7 @@ func main() {
 	if err := db.Init(dbFile); err != nil {
 		log.Fatalf("DB init failed: %v", err)
 	}
-
+	defer db.DB.Close()
 	port := os.Getenv("TODO_PORT")
 	if port == "" {
 		port = "7540"

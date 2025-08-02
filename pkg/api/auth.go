@@ -13,6 +13,11 @@ import (
 var jwtSecret = []byte("todo-jwt-secret")
 
 func signinHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	
 	var req struct {
 		Password string `json:"password"`
 	}

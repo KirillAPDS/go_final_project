@@ -15,6 +15,11 @@ func Init() {
 }
 
 func nextDateHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	nowStr := r.FormValue("now")
 	date := r.FormValue("date")
 	repeat := r.FormValue("repeat")

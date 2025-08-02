@@ -132,6 +132,11 @@ func formatID(id int64) string {
 }
 
 func doneHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	id := r.URL.Query().Get("id")
 	if id == "" {
 		writeJSONStatus(w, http.StatusBadRequest, ErrorResponse{Error: "ID is not specified"})

@@ -8,8 +8,6 @@ import (
 	"time"
 )
 
-const dateLayout = "20060102"
-
 func afterNow(date, now time.Time) bool {
 	y1, m1, d1 := date.Date()
 	y2, m2, d2 := now.Date()
@@ -21,7 +19,7 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 		return "", errors.New("no repeat rule")
 	}
 
-	start, err := time.Parse(dateLayout, dstart)
+	start, err := time.Parse(layout, dstart)
 	if err != nil {
 		return "", fmt.Errorf("invalid date format: %w", err)
 	}
@@ -43,7 +41,7 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 		for {
 			start = start.AddDate(0, 0, n)
 			if afterNow(start, now) {
-				return start.Format(dateLayout), nil
+				return start.Format(layout), nil
 			}
 		}
 
@@ -51,7 +49,7 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 		for {
 			start = start.AddDate(1, 0, 0)
 			if afterNow(start, now) {
-				return start.Format(dateLayout), nil
+				return start.Format(layout), nil
 			}
 		}
 
@@ -75,7 +73,7 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 				weekday = 7
 			}
 			if days[weekday] && afterNow(date, now) {
-				return date.Format(dateLayout), nil
+				return date.Format(layout), nil
 			}
 		}
 		return "", errors.New("no matching weekday found")
@@ -133,7 +131,7 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 				(d == last && dayMask[31]) ||
 				(d == last-1 && dayMask[30]) {
 				if afterNow(date, now) {
-					return date.Format(dateLayout), nil
+					return date.Format(layout), nil
 				}
 			}
 		}

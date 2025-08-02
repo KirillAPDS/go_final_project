@@ -1,9 +1,10 @@
 package api
 
 import (
-	"github.com/golang-jwt/jwt/v5"
 	"net/http"
 	"os"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 func auth(next http.HandlerFunc) http.HandlerFunc {

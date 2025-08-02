@@ -1,8 +1,9 @@
 package api
 
 import (
-	"github.com/KirillAPDS/go_final_project/pkg/db"
 	"net/http"
+
+	"github.com/KirillAPDS/go_final_project/pkg/db"
 )
 
 type TasksResp struct {

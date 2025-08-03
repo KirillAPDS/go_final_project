@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/KirillAPDS/go_final_project/pkg/db"
-
 )
 
 type ErrorResponse struct {
@@ -132,7 +131,7 @@ func formatID(id int64) string {
 }
 
 func doneHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
+	if r.Method != http.MethodPost {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
@@ -168,7 +167,7 @@ func doneHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	writeJSON(w, map[string]string{})  // 200 OK
+	writeJSON(w, map[string]string{})
 }
 
 func checkAndFixDate(task *db.Task) error {

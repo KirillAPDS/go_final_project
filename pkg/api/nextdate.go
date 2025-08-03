@@ -57,7 +57,7 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 		if len(parts) < 2 {
 			return "", errors.New("missing week days")
 		}
-		var days [8]bool // [1..7] = Mon..Sun
+		var days [8]bool
 		for _, p := range strings.Split(parts[1], ",") {
 			day, err := strconv.Atoi(p)
 			if err != nil || day < 1 || day > 7 {
@@ -65,8 +65,9 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 			}
 			days[day] = true
 		}
+
 		date := start
-		for i := 0; i < 400; i++ {
+		for i := 0; ; i++ {
 			date = date.AddDate(0, 0, 1)
 			weekday := int(date.Weekday())
 			if weekday == 0 {
@@ -76,7 +77,8 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 				return date.Format(layout), nil
 			}
 		}
-		return "", errors.New("no matching weekday found")
+
+		//return "", errors.New("no matching weekday found")
 
 	case "m":
 		if len(parts) < 2 {
@@ -118,23 +120,24 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 			}
 		}
 
-		date := start
 		for i := 0; i < 366*5; i++ {
-			date = date.AddDate(0, 0, 1)
+			date := start.AddDate(0, 0, i)
 			d := date.Day()
 			m := int(date.Month())
 			if !monthMask[m] {
 				continue
 			}
+
 			last := lastDayOfMonth(date)
 			if (d <= 29 && dayMask[d]) ||
-				(d == last && dayMask[31]) ||
+				(d == 31 && date.Day() == 31 && dayMask[31]) ||
 				(d == last-1 && dayMask[30]) {
 				if afterNow(date, now) {
 					return date.Format(layout), nil
 				}
 			}
 		}
+
 		return "", errors.New("no matching month day found")
 
 	default:
